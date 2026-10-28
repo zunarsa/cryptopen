@@ -149,6 +149,7 @@ export default async (req) => {
         '1w': '1W',
       }
       const bar = barMap[interval] || '5m'
+      const intervalMs = ({ '1m': 60000, '3m': 180000, '5m': 300000, '15m': 900000, '30m': 1800000, '1h': 3600000, '2h': 7200000, '4h': 14400000, '1d': 86400000, '1w': 604800000 })[interval] || 300000'
 
       try {
         const okxRes = await fetch(
@@ -169,7 +170,7 @@ export default async (req) => {
             k[3], // low
             k[4], // close
             k[5], // volume
-            parseInt(k[0]) + 300000,
+            parseInt(k[0]) + intervalMs,
             k[7] || '0',
             100,
             k[5],
@@ -200,7 +201,7 @@ export default async (req) => {
             String(k.l),
             String(k.c),
             String(k.v),
-            k.t * 1000 + 300000,
+            k.t * 1000 + intervalMs,
             '0',
             100,
             String(k.v),
@@ -213,7 +214,7 @@ export default async (req) => {
         console.warn('Gate.io klines fallback failed:', gateErr.message)
       }
 
-      return new Response(JSON.stringify([]), { status: 200, headers: corsHeaders })
+      return new Response(JSON.stringify({ error: 'upstream_unavailable', message: 'Candlestick data unavailable from OKX and Gate.io' }), { status: 502, headers: corsHeaders })
     }
 
     // 6. Premium Index / Funding Rate
